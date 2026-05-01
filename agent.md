@@ -1,38 +1,60 @@
 # Agent.md
 
-* https://www.toradex.com/computer-on-modules/verdin-arm-family/nxp-imx-8m-mini-nano
+## References
 
-* https://www.toradex.com/products/carrier-board/mallow-carrier-board
+- https://www.toradex.com/computer-on-modules/verdin-arm-family/nxp-imx-8m-mini-nano
+- https://www.toradex.com/products/carrier-board/mallow-carrier-board
 
-## Goal
+## Objective
 
-Build
+- [ ] Build Yocto Linux image (inside Docker container).
+- [ ] Build Zephyr firmware for Cortex-M4.
+- [ ] Run Zephyr blinky demo on Cortex-M4.
+- [ ] Establish Linux <-> Zephyr communication using OpenAMP.
 
-* Yocto
+## Execution Checklist
 
-  * Using docker container
+### Phase 1: Environment Setup
 
-* Zephyr for the Cortex-M4
+- [ ] Verify host has Docker installed and usable.
+- [ ] Prepare Yocto build container and sources.
+- [ ] Prepare Zephyr SDK/toolchain and workspace.
 
-Demo Application
+### Phase 2: Build Artifacts
 
-* Blinky application on Zephyr
+- [ ] Build Yocto image for target module.
+- [ ] Build Zephyr firmware for Cortex-M4.
+- [ ] Confirm build outputs are generated with no blocking errors.
 
-* Communication between Yocto and Zephyr using OpenAMP.
+### Phase 3: Deploy and Boot
 
-* Optionally:
-  * Apply a pulse on GPIO A connected to the Cortex-M4.
-  * Zephyr detects this pulse and applies the same pulse on a second GPIO B.
-  * Using a scope, measure the delay between GPIO A and GPIO B.
-  * Acceptance criterion: A-to-B propagation delay <= 5 ms.
+- [ ] Flash Yocto image to target.
+- [ ] Boot Linux and verify system is healthy.
+- [ ] Load and start Zephyr firmware on Cortex-M4 using remoteproc.
+- [ ] Confirm Zephyr firmware starts successfully.
 
-Demo Run
+### Phase 4: OpenAMP Validation
 
-* Flash Yocto
+- [ ] Start OpenAMP path after Linux and Cortex-M4 are both running.
+- [ ] Verify bidirectional Linux <-> Cortex-M4 IPC messages.
 
-* Load Zephyr onto the Cortex-M4 using remoteproc
+### Phase 5: Demo Validation
 
-* Use OpenAMP for Linux <-> Cortex-M4 IPC once both cores are running
+- [ ] Verify Zephyr blinky is visible and stable.
+- [ ] Verify OpenAMP demo traffic is stable.
 
-* Start app on Zephyr
+## Optional Timing Demo (GPIO A -> GPIO B)
+
+- [ ] Drive GPIO A pulse connected to Cortex-M4 input.
+- [ ] Zephyr detects GPIO A edge and mirrors it to GPIO B.
+- [ ] Measure delay between GPIO A and GPIO B on scope.
+- [ ] Pass criterion: A-to-B propagation delay <= 5 ms.
+
+## Final Success Criteria
+
+- [ ] Yocto boots reliably on target.
+- [ ] Zephyr runs on Cortex-M4 via remoteproc.
+- [ ] OpenAMP communication works between Linux and Zephyr.
+- [ ] Blinky demo runs.
+- [ ] Optional GPIO timing demo meets <= 5 ms requirement.
 
