@@ -4,9 +4,11 @@
 
 - https://www.toradex.com/computer-on-modules/verdin-arm-family/nxp-imx-8m-mini-nano
 - https://www.toradex.com/products/carrier-board/mallow-carrier-board
+- https://github.com/torizon/meta-toradex-torizon
 
 ## Objective
 
+- [ ] Prefer to use the torizon git repo over the yocto/zephir git repos.
 - [ ] Build Yocto Linux image (inside Docker container).
 - [ ] Build Zephyr firmware for Cortex-M4.
 - [ ] Run Zephyr blinky demo on Cortex-M4.
