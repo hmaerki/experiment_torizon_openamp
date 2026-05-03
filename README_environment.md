@@ -125,6 +125,15 @@ docker run --rm -it \
   startup-tdx.sh
 ```
 
+* Easy Installer image (most common “final binary”):
+  
+  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm-Tezi.tar
+
+* OTA package (222 MBytes):
+  
+  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm.ota.tar.zst
+  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm-Tezi_7.6.0-devel-20260502202613+build.0.tar
+
 > **NXP EULA**: The first run will prompt you to accept the NXP/Freescale EULA.
 > This is required for the iMX8M Mini BSP packages. Accept it when prompted, or
 > pre-accept by adding `ACCEPT_FSL_EULA="1"` to `conf/local.conf` before building.
