@@ -156,27 +156,39 @@ docker run --rm -it \
 Create and activate a Python virtual environment for Zephyr tooling:
 
 ```bash
-mkdir -p "$HOME/work/zephyr"
-cd "$HOME/work/zephyr"
-python3 -m venv .venv
+mkdir -p "$(pwd)/zephyr"
+cd "$(pwd)/zephyr"
+uv venv
 source .venv/bin/activate
-pip install --upgrade pip
-pip install west
+uv pip install west
 ```
 
 Initialize Zephyr workspace:
 
 ```bash
-west init -m https://github.com/zephyrproject-rtos/zephyr --mr v3.7.0 zephyrproject
-cd zephyrproject
+west init -m https://github.com/zephyrproject-rtos/zephyr --mr v3.7.0 $(pwd)/zephyr/zephyrproject
+cd $(pwd)/zephyr/zephyrproject
 west update
 west zephyr-export
-pip install -r zephyr/scripts/requirements.txt
+uv pip install -r zephyr/scripts/requirements.txt
 ```
 
 Install Zephyr SDK (pick one method):
 
 - Package manager / distro package, or
+
+  ```bash
+  # Download and install Zephyr SDK 0.16.8
+  cd ~
+  wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.8/zephyr-sdk-0.16.8_linux-x86_64.tar.xz
+  tar xf zephyr-sdk-0.16.8_linux-x86_64.tar.xz
+  cd zephyr-sdk-0.16.8
+  ./setup.sh -t arm-zephyr-eabi   # Cortex-M4 only; use -t all for all toolchains
+
+  export ZEPHYR_SDK_INSTALL_DIR="$HOME/zephyr-sdk-0.16.8"
+  echo 'export ZEPHYR_SDK_INSTALL_DIR="$HOME/zephyr-sdk-0.16.8"' >> ~/.bashrc
+  ```
+
 - Official Zephyr SDK installer from docs.
 
 Set SDK variables (example):
@@ -201,7 +213,7 @@ Run these checks before starting Phase 2 builds:
  docker run --rm hello-world
 
 # Zephyr tooling
-source "$HOME/work/zephyr/.venv/bin/activate"
+source "$(pwd)/zephyr/.venv/bin/activate"
 west --version
 cmake --version
 ninja --version
@@ -211,8 +223,13 @@ python3 --version
 Optional quick Zephyr test build (replace board as needed):
 
 ```bash
-cd "$HOME/work/zephyr/zephyrproject/zephyr"
+cd "$(pwd)/zephyr/zephyrproject/zephyr"
 west build -b reel_board samples/basic/blinky
+```
+
+```bash
+ls -lh $(pwd)/zephyr/zephyrproject/zephyr/build/zephyr/zephyr.elf
+753k
 ```
 
 ## 6) Phase 1 Completion Checklist
