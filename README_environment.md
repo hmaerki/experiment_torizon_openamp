@@ -8,7 +8,7 @@ This document covers:
 
 - Host prerequisites (Linux workstation).
 - Yocto build environment using Docker.
-- Zephyr SDK/toolchain setup for Cortex-M4 firmware builds.
+- FreeRTOS SDK/toolchain setup for R5F firmware builds (included in Torizon default configuration).
 - Basic validation checks before starting artifact builds.
 
 ## 1) Host Prerequisites
@@ -74,8 +74,8 @@ Manifest repo: `git://git.toradex.com/toradex-manifest.git`
 
 Target hardware for this project:
 
-- **Module**: Verdin iMX8M Mini → `MACHINE=verdin-imx8mm`
-- **Distro**: `torizon` (downstream NXP kernel, default for iMX8 family)
+- **Module**: Verdin AM62P → `MACHINE=verdin-am62p`
+- **Distro**: `torizon` (downstream TI kernel, default for AM62P family)
 - **Image**: `torizon-docker` (includes Docker engine, systemd, OTA)
 - **Manifest branch**: `scarthgap-7.x.y`
 - **Manifest file**: `torizon/default.xml`
@@ -119,24 +119,36 @@ docker run --rm -it \
   --name=crops \
   -v "$(pwd)/yocto-workdir:/workdir/torizon" \
   --workdir=/workdir/torizon \
-  -e MACHINE=verdin-imx8mm \
+  -e MACHINE=verdin-am62p \
   -e IMAGE=torizon-docker \
   torizon/crops:scarthgap-7.x.y \
   startup-tdx.sh
 ```
 
+The binaries may be found here:
+
+```bash
+yocto-workdir/build-torizon/deploy/images/verdin-am62p/torizon-docker-verdin-am62p-20260504064800.ota.tar.zst
+240MByte
+
+yocto-workdir/build-torizon/deploy/images/verdin-am62p/ti-dm/am62pxx/ipc_echo_testb_mcu1_0_release_strip.xer5f
+268kByte
+```
+
+The .xer5f format is TI's ELF format for R5F cores. These are IPC echo test binaries — the FreeRTOS firmware used to demonstrate remoteproc loading and OpenAMP IPC between Linux and the R5F. The signed variant is for HS (High Security) devices.
+
+Note that this is a pre-built IPC echo test demo, not a blinky. If you want a blinky on the R5F, that would need to be a separate build from TI's MCU+ SDK.
+
 * Easy Installer image (most common “final binary”):
   
-  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm-Tezi.tar
+  * yocto-workdir/build-torizon/deploy/images/verdin-am62p/torizon-docker-verdin-am62p-Tezi.tar
 
-* OTA package (222 MBytes):
+* OTA package:
   
-  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm.ota.tar.zst
-  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm-Tezi_7.6.0-devel-20260502202613+build.0.tar
+  * yocto-workdir/build-torizon/deploy/images/verdin-am62p/torizon-docker-verdin-am62p.ota.tar.zst
 
-> **NXP EULA**: The first run will prompt you to accept the NXP/Freescale EULA.
-> This is required for the iMX8M Mini BSP packages. Accept it when prompted, or
-> pre-accept by adding `ACCEPT_FSL_EULA="1"` to `conf/local.conf` before building.
+> **TI EULA**: The first run may prompt you to accept the TI BSP EULA.
+> Accept it when prompted, or pre-accept by adding `ACCEPT_TI_EULA="1"` to `conf/local.conf` before building.
 
 To open an interactive shell inside the container without starting a build (useful for inspecting the environment):
 
@@ -151,57 +163,11 @@ docker run --rm -it \
 
 (Omit `-e IMAGE=...` to get a shell instead of starting a build.)
 
-## 4) Prepare Zephyr Toolchain and Workspace
+## 4) FreeRTOS Toolchain
 
-Create and activate a Python virtual environment for Zephyr tooling:
+FreeRTOS support for the R5F core is included in the Torizon default configuration — no separate SDK or toolchain installation is required. The FreeRTOS firmware is built as part of the Yocto/Torizon build in Phase 2.
 
-```bash
-mkdir -p "$(pwd)/zephyr"
-cd "$(pwd)/zephyr"
-uv venv
-source .venv/bin/activate
-uv pip install west
-```
-
-Initialize Zephyr workspace:
-
-```bash
-west init -m https://github.com/zephyrproject-rtos/zephyr --mr v3.7.0 $(pwd)/zephyr/zephyrproject
-cd $(pwd)/zephyr/zephyrproject
-west update
-west zephyr-export
-uv pip install -r zephyr/scripts/requirements.txt
-```
-
-Install Zephyr SDK (pick one method):
-
-- Package manager / distro package, or
-
-  ```bash
-  # Download and install Zephyr SDK 0.16.8
-  cd ~
-  wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.8/zephyr-sdk-0.16.8_linux-x86_64.tar.xz
-  tar xf zephyr-sdk-0.16.8_linux-x86_64.tar.xz
-  cd zephyr-sdk-0.16.8
-  ./setup.sh -t arm-zephyr-eabi   # Cortex-M4 only; use -t all for all toolchains
-
-  export ZEPHYR_SDK_INSTALL_DIR="$HOME/zephyr-sdk-0.16.8"
-  echo 'export ZEPHYR_SDK_INSTALL_DIR="$HOME/zephyr-sdk-0.16.8"' >> ~/.bashrc
-  ```
-
-- Official Zephyr SDK installer from docs.
-
-Set SDK variables (example):
-
-```bash
-export ZEPHYR_SDK_INSTALL_DIR="$HOME/toolchains/zephyr-sdk"
-```
-
-Persist environment (optional):
-
-```bash
-echo 'export ZEPHYR_SDK_INSTALL_DIR="$HOME/toolchains/zephyr-sdk"' >> ~/.bashrc
-```
+No additional setup steps are needed beyond the Yocto workspace prepared in Section 3.
 
 ## 5) Toolchain and Build Sanity Checks
 
@@ -209,27 +175,14 @@ Run these checks before starting Phase 2 builds:
 
 ```bash
 # Docker
- docker --version
- docker run --rm hello-world
+docker --version
+docker run --rm hello-world
 
-# Zephyr tooling
-source "$(pwd)/zephyr/.venv/bin/activate"
-west --version
-cmake --version
-ninja --version
-python3 --version
-```
+# repo tool
+repo version
 
-Optional quick Zephyr test build (replace board as needed):
-
-```bash
-cd "$(pwd)/zephyr/zephyrproject/zephyr"
-west build -b reel_board samples/basic/blinky
-```
-
-```bash
-ls -lh $(pwd)/zephyr/zephyrproject/zephyr/build/zephyr/zephyr.elf
-753k
+# Yocto workspace
+ls yocto-workdir/.repo
 ```
 
 ## 6) Phase 1 Completion Checklist
@@ -239,13 +192,10 @@ ls -lh $(pwd)/zephyr/zephyrproject/zephyr/build/zephyr/zephyr.elf
 - [ ] User can run Docker commands without sudo.
 - [ ] `repo` tool installed and on PATH.
 - [ ] Torizon manifest repo initialised (`repo init`) and synced (`repo sync`).
-- [ ] Zephyr workspace initialized with `west`.
-- [ ] Zephyr Python requirements installed.
-- [ ] Zephyr SDK configured.
 - [ ] Sanity checks pass.
 
 ## Notes
 
 - Keep Yocto builds in Docker for reproducibility.
 - Keep Yocto downloads and sstate caches outside containers to reduce rebuild time.
-- Keep Zephyr tooling inside a dedicated Python virtual environment.
+- FreeRTOS firmware for R5F is built within the Torizon Yocto build system; no separate toolchain is needed.
