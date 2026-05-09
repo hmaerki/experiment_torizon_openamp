@@ -2,7 +2,16 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"name": "projectxy-meta",
+			"path": "yocto-workdir/layers/meta-projectxy"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.watcherExclude": {
+			"${workspaceFolder}/yocto-workdir/**": true,
+			"${workspaceFolder}/zephyr/**": true,
+		}
+	}
 }

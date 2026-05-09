@@ -129,7 +129,7 @@ docker run --rm -it \
   
   * yocto-workdir/build-torizon/deploy/images/verdin-imx8mp/torizon-docker-verdin-imx8mp-Tezi.tar
 
-* OTA package (214 MBytes):
+* OTA package (214 MBytes, 310 Mbytes with zephyr build tools):
   
   * yocto-workdir/build-torizon/deploy/images/verdin-imx8mp/torizon-docker-verdin-imx8mp.ota.tar.zst
   * yocto-workdir/build-torizon/deploy/images/verdin-imx8mp/torizon-docker-verdin-imx8mp-Tezi_7.6.0-devel-20260502202613+build.0.tar
