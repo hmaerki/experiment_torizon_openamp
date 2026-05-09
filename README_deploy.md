@@ -4,10 +4,10 @@
 
 These binaries have been build according to [README_environment.md](README_environment.md):
 
-* Yoco binary
+* Yocto binary
 
-  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm.ota.tar.zst
-  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm-Tezi.tar
+   * yocto-workdir/build-torizon/deploy/images/verdin-imx8mp/torizon-docker-verdin-imx8mp.ota.tar.zst
+   * yocto-workdir/build-torizon/deploy/images/verdin-imx8mp/torizon-docker-verdin-imx8mp-Tezi.tar
 
 * Zephyr binary
 
@@ -15,7 +15,7 @@ These binaries have been build according to [README_environment.md](README_envir
 
 ## Deploy both binaries and start the blinky app
 
-### Step 1: Flash Torizon OS to the Verdin iMX8M Mini
+### Step 1: Flash Torizon OS to the Verdin iMX8M Plus
 
 Use the [Toradex Easy Installer (Tezi)](https://developer.toradex.com/software/toradex-easy-installer) to flash the Yocto image.
 
@@ -25,13 +25,13 @@ Use the [Toradex Easy Installer (Tezi)](https://developer.toradex.com/software/t
    ```bash
    # Tezi runs on the module itself; connect via USB-to-serial or ethernet.
    # The image tarball to load is:
-   ls yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm-Tezi.tar
+   ls yocto-workdir/build-torizon/deploy/images/verdin-imx8mp/torizon-docker-verdin-imx8mp-Tezi.tar
    ```
 
 3. In the Tezi web UI (`http://<module-ip>:8080`) or USB mass-storage mode, select and install:
 
    ```
-   yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm-Tezi.tar
+   yocto-workdir/build-torizon/deploy/images/verdin-imx8mp/torizon-docker-verdin-imx8mp-Tezi.tar
    ```
 
 4. After flashing completes, reboot the module and confirm Linux boots:
@@ -44,25 +44,25 @@ Use the [Toradex Easy Installer (Tezi)](https://developer.toradex.com/software/t
 
 ### Step 2: Copy the Zephyr ELF to the target
 
-From the host, copy the Cortex-M4 firmware to the Linux filesystem on the module:
+From the host, copy the Cortex-M7 firmware to the Linux filesystem on the module:
 
 ```bash
 scp zephyr/zephyrproject/zephyr/build/zephyr/zephyr.elf \
     torizon@<module-ip>:/lib/firmware/zephyr.elf
 ```
 
-### Step 3: Load and start Zephyr on the Cortex-M4 via remoteproc
+### Step 3: Load and start Zephyr on the Cortex-M7 via remoteproc
 
 On the target (over SSH):
 
 ```bash
-# Bind the remoteproc driver for the iMX8MM M4 core
+# Bind the remoteproc driver for the iMX8MP M7 core
 echo -n "imx-rproc" | sudo tee /sys/bus/platform/drivers/imx-rproc/bind 2>/dev/null || true
 
 # Point remoteproc at the firmware
 echo zephyr.elf | sudo tee /sys/class/remoteproc/remoteproc0/firmware
 
-# Start the Cortex-M4 core
+# Start the Cortex-M7 core
 echo start | sudo tee /sys/class/remoteproc/remoteproc0/state
 ```
 
@@ -81,7 +81,7 @@ The Zephyr blinky sample toggles an LED on the Verdin module. Observe the LED ph
 cat /sys/class/remoteproc/remoteproc0/state   # must stay "running"
 ```
 
-### Step 5: Stop the Cortex-M4 core (when done)
+### Step 5: Stop the Cortex-M7 core (when done)
 
 ```bash
 echo stop | sudo tee /sys/class/remoteproc/remoteproc0/state

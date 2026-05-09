@@ -8,7 +8,7 @@ This document covers:
 
 - Host prerequisites (Linux workstation).
 - Yocto build environment using Docker.
-- Zephyr SDK/toolchain setup for Cortex-M4 firmware builds.
+- Zephyr SDK/toolchain setup for Cortex-M7 firmware builds.
 - Basic validation checks before starting artifact builds.
 
 ## 1) Host Prerequisites
@@ -74,7 +74,7 @@ Manifest repo: `git://git.toradex.com/toradex-manifest.git`
 
 Target hardware for this project:
 
-- **Module**: Verdin iMX8M Mini → `MACHINE=verdin-imx8mm`
+- **Module**: Verdin iMX8M Plus → `MACHINE=verdin-imx8mp`
 - **Distro**: `torizon` (downstream NXP kernel, default for iMX8 family)
 - **Image**: `torizon-docker` (includes Docker engine, systemd, OTA)
 - **Manifest branch**: `scarthgap-7.x.y`
@@ -119,7 +119,7 @@ docker run --rm -it \
   --name=crops \
   -v "$(pwd)/yocto-workdir:/workdir/torizon" \
   --workdir=/workdir/torizon \
-  -e MACHINE=verdin-imx8mm \
+  -e MACHINE=verdin-imx8mp \
   -e IMAGE=torizon-docker \
   torizon/crops:scarthgap-7.x.y \
   startup-tdx.sh
@@ -127,15 +127,15 @@ docker run --rm -it \
 
 * Easy Installer image (most common “final binary”):
   
-  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm-Tezi.tar
+  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mp/torizon-docker-verdin-imx8mp-Tezi.tar
 
-* OTA package (222 MBytes):
+* OTA package (214 MBytes):
   
-  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm.ota.tar.zst
-  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mm/torizon-docker-verdin-imx8mm-Tezi_7.6.0-devel-20260502202613+build.0.tar
+  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mp/torizon-docker-verdin-imx8mp.ota.tar.zst
+  * yocto-workdir/build-torizon/deploy/images/verdin-imx8mp/torizon-docker-verdin-imx8mp-Tezi_7.6.0-devel-20260502202613+build.0.tar
 
 > **NXP EULA**: The first run will prompt you to accept the NXP/Freescale EULA.
-> This is required for the iMX8M Mini BSP packages. Accept it when prompted, or
+> This is required for the iMX8M Plus BSP packages. Accept it when prompted, or
 > pre-accept by adding `ACCEPT_FSL_EULA="1"` to `conf/local.conf` before building.
 
 To open an interactive shell inside the container without starting a build (useful for inspecting the environment):
@@ -183,7 +183,7 @@ Install Zephyr SDK (pick one method):
   wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.8/zephyr-sdk-0.16.8_linux-x86_64.tar.xz
   tar xf zephyr-sdk-0.16.8_linux-x86_64.tar.xz
   cd zephyr-sdk-0.16.8
-  ./setup.sh -t arm-zephyr-eabi   # Cortex-M4 only; use -t all for all toolchains
+  ./setup.sh -t arm-zephyr-eabi   # Cortex-M7 only; use -t all for all toolchains
 
   export ZEPHYR_SDK_INSTALL_DIR="$HOME/zephyr-sdk-0.16.8"
   echo 'export ZEPHYR_SDK_INSTALL_DIR="$HOME/zephyr-sdk-0.16.8"' >> ~/.bashrc
@@ -229,7 +229,7 @@ west build -b reel_board samples/basic/blinky
 
 ```bash
 ls -lh $(pwd)/zephyr/zephyrproject/zephyr/build/zephyr/zephyr.elf
-753k
+770k
 ```
 
 ## 6) Phase 1 Completion Checklist
