@@ -11,3 +11,5 @@
 ## Footprint UART: Update distance to pins
 
 ## Footprint UART: Remove copper below UART
+
+## UART3/4: The levelshifter should be powered by UART3 AND UART4!

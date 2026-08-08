@@ -1,9 +1,7 @@
 set -euox pipefail
 
-if [ -z "${ZEPHYR_SDK_INSTALL_DIR:-}" ]; then
-    echo "Please add to '~/.profile': export ZEPHYR_SDK_INSTALL_DIR=~/zephyr-sdk-1.0.1/"
-    export ZEPHYR_SDK_INSTALL_DIR=~/zephyr-sdk-1.0.1/
-fi
+ZEPHYR_SDK_INSTALL_DIR="${ZEPHYR_SDK_INSTALL_DIR:-$HOME/zephyr-sdk-1.0.1}"
+export ZEPHYR_SDK_INSTALL_DIR
 
 time (
     rm -rf .venv .west build bootloader modules zephyr
@@ -21,5 +19,7 @@ time (
 
     uv pip install -r zephyr/scripts/requirements-base.txt
 
-    west sdk install --gnu-toolchains arm-zephyr-eabi
+    west sdk install \
+    --install-dir "$ZEPHYR_SDK_INSTALL_DIR" \
+    --gnu-toolchains arm-zephyr-eabi
 )
