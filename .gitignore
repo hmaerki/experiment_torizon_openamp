@@ -1,3 +1,4 @@
+**/*.pyc
 yocto-workdir/.repo/
 yocto-workdir/
 zephyr/

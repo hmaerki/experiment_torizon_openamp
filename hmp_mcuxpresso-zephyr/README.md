@@ -91,3 +91,39 @@ ls  -1 /dev/re* /dev/rpmsg* /sys/bus/rpmsg/devices/
 virtio0.rpmsg_ctrl.0.0
 virtio0.rpmsg_ns.53.53
 ```
+
+## Compare this binary against working TCM binary
+
+```bash
+export A=build/zephyr/rpmsg_lite_sample.elf
+export B=/lib/firmware/imx8mp_m7_TCM_rpmsg_lite_pingpong_rtos_linux_remote.elf
+readelf -SW $A | grep resource_table
+Section Headers:
+  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
+  [31] .resource_table   PROGBITS        0000b680 00b798 000058 00  WA  0   0  8
+readelf -SW $B | grep resource_table
+Section Headers:
+  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
+  [ 2] .resource_table   PROGBITS        00000400 001400 000058 00   A  0   0  1
+
+readelf -x .resource_table $A
+Hex dump of section '.resource_table':
+  0x0000b680 01000000 01000000 00000000 00000000 ................
+  0x0000b690 14000000 03000000 07000000 00000000 ................
+  0x0000b6a0 01000000 00000000 00000000 00020000 ................
+  0x0000b6b0 ffffffff 10000000 08000000 01000000 ................
+  0x0000b6c0 00000000 ffffffff 10000000 08000000 ................
+  0x0000b6d0 00000000 00000000                   ........
+
+readelf -x .resource_table $B
+Hex dump of section '.resource_table':
+  0x00000400 01000000 01000000 00000000 00000000 ................
+  0x00000410 14000000 03000000 07000000 00000000 ................
+  0x00000420 01000000 00000000 00000000 00020000 ................
+  0x00000430 00000055 00100000 00010000 00000000 ...U............
+  0x00000440 00000000 00800055 00100000 00010000 .......U........
+  0x00000450 01000000 00000000                   ........
+
+./decode_resource_table.py $A
+./decode_resource_table.py $A
+
