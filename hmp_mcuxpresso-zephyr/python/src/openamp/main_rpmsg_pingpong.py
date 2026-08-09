@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+
+import argparse
+import asyncio
+import pathlib
+import sys
+import time
+import typing
+
+from util_rpmsg import Rpmsg
+
+CHANNEL: str = "rpmsg-client-sample-py"
+RPMSG_SAMPLE_MESSAGE: bytes = b"hello world!"
+
+
+async def run_pingpong(
+    channel_name: str,
+    control_name: pathlib.Path | None,
+    count: int,
+    timeout: float,
+) -> None:
+    async with Rpmsg(channel_name, control_name, timeout) as rpmsg:
+        assert rpmsg.channel is not None
+        print(f"Channel {rpmsg.channel.name}")
+        print(f"Created endpoint through {rpmsg.control}")
+        print(f"Exchanging {count} messages through {rpmsg.endpoint}")
+
+        await rpmsg.write(RPMSG_SAMPLE_MESSAGE)
+        received = 0
+        begin_s = time.monotonic()
+        while received < count:
+            payload = await rpmsg.read(512)
+            if not payload:
+                raise RuntimeError("RPMsg endpoint closed")
+            received += 1
+            print(f"incoming msg {received}: {payload!r}")
+            if received < count:
+                await rpmsg.write(RPMSG_SAMPLE_MESSAGE)
+
+        duration_s = time.monotonic() - begin_s
+        print(
+            f"goodbye after {duration_s:0.1f}s! {1000.0 * duration_s / count:0.1f}ms per call."
+        )
+
+        await asyncio.sleep(10000)
+
+
+def parse_args(argv: typing.Sequence[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=f"Userspace equivalent of Linux's '{CHANNEL}' driver."
+    )
+    parser.add_argument(
+        "--channel",
+        default=CHANNEL,
+        help=f"RPMsg channel name (default: '{CHANNEL}')",
+    )
+    parser.add_argument(
+        "--count",
+        type=int,
+        default=100,
+        help="number of replies to receive (default: 100)",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=10.0,
+        help="discovery timeout in seconds (default: 10)",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: typing.Sequence[str] | None = None) -> int:
+    args = parse_args(argv)
+    try:
+        asyncio.run(
+            run_pingpong(
+                channel_name=args.channel,
+                control_name=None,
+                count=args.count,
+                timeout=args.timeout,
+            )
+        )
+    except KeyboardInterrupt:
+        print("\nStopped", file=sys.stderr)
+        return 130
+    except (OSError, RuntimeError, TimeoutError, ValueError) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

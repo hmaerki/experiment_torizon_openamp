@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include <inttypes.h>
+#include <stdio.h>
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/ipm.h>
@@ -18,6 +19,11 @@
 
 #include <addr_translation.h>
 #include <resource_table.h>
+
+// Use of the kernel module with the same name
+// #define channel "rpmsg-client-sample"
+// Use with rpmsg_lite_sample.py
+#define channel "rpmsg-client-sample-py"
 
 LOG_MODULE_REGISTER(rpmsg_client_sample);
 
@@ -38,11 +44,14 @@ LOG_MODULE_REGISTER(rpmsg_client_sample);
 
 K_THREAD_STACK_DEFINE(manager_stack, APP_TASK_STACK_SIZE);
 K_THREAD_STACK_DEFINE(client_stack, APP_TASK_STACK_SIZE);
+K_THREAD_STACK_DEFINE(sender_stack, APP_TASK_STACK_SIZE);
 
 static struct k_thread manager_thread;
 static struct k_thread client_thread;
+static struct k_thread sender_thread;
 static K_SEM_DEFINE(ipm_sem, 0, 1);
 static K_SEM_DEFINE(client_ready_sem, 0, 1);
+static K_SEM_DEFINE(sender_ready_sem, 0, 1);
 
 static const struct device *const ipm = DEVICE_DT_GET(DT_CHOSEN(zephyr_ipc));
 static metal_phys_addr_t shm_physmap = SHM_START_ADDR;
@@ -79,7 +88,8 @@ static int endpoint_callback(struct rpmsg_endpoint *ept, void *data,
     ARG_UNUSED(src);
     ARG_UNUSED(priv);
 
-    LOG_INF("Received %u bytes", (unsigned int)len);
+    // The * means: take the precision from the next argument.
+    LOG_INF("Received %u bytes: '%.*s'", (unsigned int)len, (unsigned int)len, (char*)data);
     return rpmsg_send(ept, data, len);
 }
 
@@ -256,7 +266,7 @@ static void client(void *arg1, void *arg2, void *arg3)
     k_sem_take(&client_ready_sem, K_FOREVER);
 
     LOG_INF("client(): rpmsg_create_ept");
-    int ret = rpmsg_create_ept(&endpoint, rpdev, "rpmsg-client-sample",
+    int ret = rpmsg_create_ept(&endpoint, rpdev, channel,
                    RPMSG_ADDR_ANY, RPMSG_ADDR_ANY,
                    endpoint_callback, NULL);
     if (ret != 0) {
@@ -264,7 +274,36 @@ static void client(void *arg1, void *arg2, void *arg3)
         return;
     }
 
-    LOG_INF("Linux rpmsg-client-sample endpoint is ready");
+    LOG_INF("Linux '%s' endpoint is ready", channel);
+    k_sem_give(&sender_ready_sem);
+}
+
+static void sender(void *arg1, void *arg2, void *arg3)
+{
+  uint32_t counter = 0;
+  char message[32];
+
+  ARG_UNUSED(arg1);
+  ARG_UNUSED(arg2);
+  ARG_UNUSED(arg3);
+
+  k_sem_take(&sender_ready_sem, K_FOREVER);
+
+  while (true) {
+    if (is_rpmsg_ept_ready(&endpoint)) {
+      int len = snprintf(message, sizeof(message), "hello %" PRIu32 "\n",
+             counter);
+      int ret = rpmsg_send(&endpoint, message, len);
+
+      if (ret < 0) {
+        LOG_WRN("Could not send message: %d", ret);
+      } else {
+        counter++;
+      }
+    }
+
+    k_sleep(K_SECONDS(1));
+  }
 }
 
 int main(void)
@@ -276,6 +315,8 @@ int main(void)
             manager, NULL, NULL, NULL, K_PRIO_COOP(8), 0, K_NO_WAIT);
     k_thread_create(&client_thread, client_stack, APP_TASK_STACK_SIZE,
             client, NULL, NULL, NULL, K_PRIO_COOP(7), 0, K_NO_WAIT);
+    k_thread_create(&sender_thread, sender_stack, APP_TASK_STACK_SIZE,
+            sender, NULL, NULL, NULL, K_PRIO_COOP(7), 0, K_NO_WAIT);
 
     return 0;
 }
