@@ -67,3 +67,8 @@ Minimal workflow:
 3. Build the `rpmsg_lite_str_echo_rtos` and `rpmsg_lite_pingpong_rtos_linux` remote examples.
 4. Copy the resulting `.elf` files into `/lib/firmware` using the names already used above.
 
+## Similar boards
+
+https://www.nxp.com/design/design-center/development-boards-and-designs/MIMXRT1180-EVK
+
+Uses Arm Cortex-M7 800 MHz and Arm Cortex-M33 300 MHz

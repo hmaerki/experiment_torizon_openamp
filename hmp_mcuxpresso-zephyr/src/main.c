@@ -57,12 +57,20 @@ static void *resource_table;
 static void ipm_callback(const struct device *dev, void *context,
              uint32_t id, volatile void *data)
 {
+  struct fw_resource_table *table = resource_table;
+
     ARG_UNUSED(dev);
     ARG_UNUSED(context);
     ARG_UNUSED(id);
     ARG_UNUSED(data);
     k_sem_give(&ipm_sem);
-  	LOG_INF("ipm_callback()");
+  LOG_INF("ipm_callback()");
+  if (table != NULL) {
+    LOG_INF("ipm_callback(): status=0x%02x, vring0.da=0x%08" PRIx32
+      ", vring1.da=0x%08" PRIx32,
+      (unsigned int)table->vdev.status,
+      table->vring0.da, table->vring1.da);
+  }
 }
 
 static int endpoint_callback(struct rpmsg_endpoint *ept, void *data,
@@ -84,9 +92,13 @@ static void new_service_callback(struct rpmsg_device *rdev, const char *name,
 
 static int mailbox_notify(void *priv, uint32_t id)
 {
+  uint32_t message = id << 16;
+
     ARG_UNUSED(priv);
-  	LOG_INF("mailbox_notify()");
-    return IPM_SEND(ipm, 0, id, &id, sizeof(id));
+  LOG_INF("mailbox_notify(): vring=%" PRIu32 ", channel=%d",
+    id, CONFIG_OPENAMP_RSC_TABLE_IPM_TX_ID);
+  return IPM_SEND(ipm, 0, CONFIG_OPENAMP_RSC_TABLE_IPM_TX_ID,
+    &message, sizeof(message));
 }
 
 static int platform_init(void)
@@ -175,7 +187,7 @@ static struct rpmsg_device *create_rpmsg_device(void)
     vring = rsc_table_get_vring0(resource_table);
   	LOG_INF("create_rpmsg_device(): rproc_virtio_init_vring");
     ret = rproc_virtio_init_vring(vdev, 0, vring->notifyid,
-                      (void *)vring->da, &resource_table_io_data,
+                      (void *)vring->da, &shm_io_data,
                       vring->num, vring->align);
     if (ret != 0) {
         LOG_ERR("Failed to initialize vring 0: %d", ret);
@@ -186,7 +198,7 @@ static struct rpmsg_device *create_rpmsg_device(void)
     vring = rsc_table_get_vring1(resource_table);
   	LOG_INF("create_rpmsg_device(): rproc_virtio_init_vring");
     ret = rproc_virtio_init_vring(vdev, 1, vring->notifyid,
-                      (void *)vring->da, &resource_table_io_data,
+              (void *)vring->da, &shm_io_data,
                       vring->num, vring->align);
     if (ret != 0) {
         LOG_ERR("Failed to initialize vring 1: %d", ret);

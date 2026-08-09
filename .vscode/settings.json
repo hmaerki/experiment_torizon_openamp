@@ -1,3 +1,4 @@
 {
-    "host_arch": "amd64"
+    "host_arch": "amd64",
+    "C_Cpp.default.compilerPath": "/home/torizon/zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/arm-zephyr-eabi/bin/ar"
 }
