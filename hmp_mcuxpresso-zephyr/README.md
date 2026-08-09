@@ -98,4 +98,27 @@ Hex dump of section '.resource_table':
 
 ./decode_resource_table.py $A
 ./decode_resource_table.py $A
+```
 
+## Fixes required to make rpmsg working
+
+The resource table was not the fundamental fix. Standard Zephyr’s table works.
+
+The actual fixes were:
+
+1. **Use the shared runtime resource table** at `0x550ff000` with `CONFIG_OPENAMP_COPY_RSC_TABLE=y`, so Linux and M7 observe the same table.
+2. **Map vrings through shared-memory I/O** (`shm_io_data`), after Linux resolves their addresses to:
+   - vring0: `0x55000000`
+   - vring1: `0x55008000`
+3. **Send notifications on physical MU channel 1**, while encoding the logical vring ID in bits 16–31:
+   ```c
+   uint32_t message = id << 16;
+   ipm_send(ipm, 0, CONFIG_OPENAMP_RSC_TABLE_IPM_TX_ID,
+            &message, sizeof(message));
+   ```
+   This was the decisive signaling fix.
+4. **Let OpenAMP allocate and free virtqueues**. Manual allocation caused ownership conflicts and a double-free fault.
+5. **Increase the heap to 8192 bytes** for two 256-descriptor queues.
+6. Match Linux’s expected queue configuration: **256 descriptors, 4096-byte alignment, notify IDs 0 and 1**.
+
+In short: RPMsg started working once the shared table and vrings were mapped correctly, OpenAMP owned the queues, and M7 notified Linux using the correct MU channel and message encoding.
