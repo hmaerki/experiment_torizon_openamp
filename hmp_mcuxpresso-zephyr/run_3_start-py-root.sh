@@ -1,7 +1,10 @@
+set -x
+
 modprobe rpmsg_ns
 modprobe rpmsg_ctrl
 modprobe rpmsg_char
-modprobe -r rpmsg-client-sample 2>/dev/null || true
+modprobe imx_rpmsg_tty
+# modprobe -r rpmsg-client-sample 2>/dev/null || true
 
 mkdir -p /root/firmware
 echo stop > /sys/class/remoteproc/remoteproc0/state
