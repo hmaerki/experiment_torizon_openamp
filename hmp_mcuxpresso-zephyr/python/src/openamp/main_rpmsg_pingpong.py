@@ -1,24 +1,20 @@
 #!/usr/bin/env python3
 
-import argparse
 import asyncio
-import pathlib
-import sys
 import time
-import typing
 
 from util_rpmsg import Rpmsg
 
-CHANNEL: str = "rpmsg-client-sample-py"
+# This must match with the same string in main.cpp
+CHANNEL_NAME: str = "rpmsg-demo-xyrx2"
 
 
-async def run_pingpong(
-    channel_name: str,
-    control_name: pathlib.Path | None,
-    count: int,
-    timeout: float,
-) -> None:
-    async with Rpmsg(channel_name, control_name, timeout) as rpmsg:
+async def run_pingpong() -> None:
+    count = 3
+
+    async with Rpmsg(
+        channel_name=CHANNEL_NAME, control_name=None, timeout=10.0
+    ) as rpmsg:
         assert rpmsg.channel is not None
         print(f"Channel {rpmsg.channel.name}")
         print(f"Created endpoint through {rpmsg.control}")
@@ -42,49 +38,9 @@ async def run_pingpong(
         )
 
 
-def parse_args(argv: typing.Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description=f"Userspace equivalent of Linux's '{CHANNEL}' driver."
-    )
-    parser.add_argument(
-        "--channel",
-        default=CHANNEL,
-        help=f"RPMsg channel name (default: '{CHANNEL}')",
-    )
-    parser.add_argument(
-        "--count",
-        type=int,
-        default=3,
-        help="number of replies to receive (default: 100)",
-    )
-    parser.add_argument(
-        "--timeout",
-        type=float,
-        default=10.0,
-        help="discovery timeout in seconds (default: 10)",
-    )
-    return parser.parse_args(argv)
-
-
-def main(argv: typing.Sequence[str] | None = None) -> int:
-    args = parse_args(argv)
-    try:
-        asyncio.run(
-            run_pingpong(
-                channel_name=args.channel,
-                control_name=None,
-                count=args.count,
-                timeout=args.timeout,
-            )
-        )
-    except KeyboardInterrupt:
-        print("\nStopped", file=sys.stderr)
-        return 130
-    except (OSError, RuntimeError, TimeoutError, ValueError) as error:
-        print(f"error: {error}", file=sys.stderr)
-        return 1
-    return 0
+def main() -> int:
+    asyncio.run(run_pingpong())
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

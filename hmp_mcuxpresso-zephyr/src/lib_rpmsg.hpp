@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file
+ * @brief C++ wrappers for RPMsg endpoints and the Zephyr OpenAMP transport.
+ */
+
 #include <cstddef>
 #include <cstdint>
 
@@ -13,6 +18,9 @@ namespace rpmsg {
 
 class Transport;
 
+/**
+ * @brief Represents an RPMsg channel endpoint with a receive callback.
+ */
 class Endpoint {
   public:
     using ReceiveHandler = int (*)(Endpoint &endpoint, const void *data,
@@ -43,6 +51,9 @@ class Endpoint {
     bool bound_{false};
 };
 
+  /**
+   * @brief Initializes and runs the Zephyr OpenAMP RPMsg transport.
+   */
 class Transport {
   public:
     Transport();

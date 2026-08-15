@@ -34,7 +34,7 @@ sudo su
 
 ```text
 [  323.668053] remoteproc remoteproc0: powering up imx-rproc
-[  323.668308] remoteproc remoteproc0: Booting fw image rpmsg_lite_sample_MIMX8ML8_cm7.elf, size 31956
+[  323.668308] remoteproc remoteproc0: Booting fw image rpmsg_demo_MIMX8ML8_cm7.elf, size 31956
 [  324.185378] rproc-virtio rproc-virtio.2.auto: assigned reserved memory node vdevbuffer@55400000
 [  324.295338] imx-rproc imx8mp-cm7: imx_rproc_kick: failed (0, err:-62)
 [  324.301804] virtio_rpmsg_bus virtio0: rpmsg host is online

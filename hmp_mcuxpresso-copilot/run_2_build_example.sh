@@ -35,9 +35,9 @@ SYSTEM_FILE="$DEVICE_DIR/system_${DEVICE}_cm7.c"
 LINKER_SCRIPT="$DEVICE_DIR/gcc/${DEVICE}xxxxx_cm7_ram.ld"
 
 MAIN_C="$BUILD_DIR/main.c"
-OUT_ELF="$BUILD_DIR/rpmsg_lite_sample_${DEVICE}_cm7.elf"
-OUT_BIN="$BUILD_DIR/rpmsg_lite_sample_${DEVICE}_cm7.bin"
-OUT_MAP="$BUILD_DIR/rpmsg_lite_sample_${DEVICE}_cm7.map"
+OUT_ELF="$BUILD_DIR/rpmsg_demo_${DEVICE}_cm7.elf"
+OUT_BIN="$BUILD_DIR/rpmsg_demo_${DEVICE}_cm7.bin"
+OUT_MAP="$BUILD_DIR/rpmsg_demo_${DEVICE}_cm7.map"
 
 if [ ! -d "$MCUX_SDK_DIR" ]; then
   echo "MCUX SDK not found at $MCUX_SDK_DIR"

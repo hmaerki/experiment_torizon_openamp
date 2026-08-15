@@ -3,7 +3,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(rpmsg_client_sample);
+LOG_MODULE_REGISTER(rpmsg_demo);
 
 #define APP_TASK_STACK_SIZE 2048
 
@@ -18,7 +18,7 @@ int echo(rpmsg::Endpoint &endpoint, const void *data, std::size_t size,
     return endpoint.send(data, size);
 }
 
-rpmsg::Endpoint endpoint{"rpmsg-client-sample-py", echo};
+rpmsg::Endpoint endpoint{"rpmsg-demo-xyrx2", echo};
 
 void manager(void *, void *, void *) {
     if (transport.initialize() != 0) {
@@ -44,8 +44,7 @@ K_THREAD_DEFINE(client_thread, APP_TASK_STACK_SIZE, client, NULL, NULL, NULL,
 } // namespace
 
 int main(void) {
-    LOG_INF("Starting Verdin iMX8MP OpenAMP remote");
-    printk("Starting Verdin iMX8MP OpenAMP remote!\n");
+    LOG_INF("Starting Verdin iMX8MP OpenAMP RpMsg demo");
 
     k_thread_start(manager_thread);
     k_thread_start(client_thread);

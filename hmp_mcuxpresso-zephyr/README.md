@@ -1,65 +1,50 @@
-hmp_mcuxpresso-zephyr/sources/rpmsg-lite/zephyr/samples/rpmsglite_pingpong/remote/src/main.c
+# Demo RpMsg
 
-hmp_mcuxpresso-zephyr/prj_verdin_imx8mp.conf
+This demo uses a zephyr app on the M7 side and some python conde on the linux side.
 
 
+## Build and run
 
 ```bash
 cd hmp_mcuxpresso-zephyr
 
-sudo su
-./run_3_start-root.sh
+./run_2_build_all.sh
+sudo ./run_3_start-root.sh
 ```
 
 ```bash
 dmsg --follow
 
-[ 1775.515759] remoteproc remoteproc0: stopped remote processor imx-rproc
-[ 1775.542033] remoteproc remoteproc0: powering up imx-rproc
-[ 1775.544481] remoteproc remoteproc0: Booting fw image rpmsg_lite_sample.elf, size 1067036
-[ 1776.058711] rproc-virtio rproc-virtio.2.auto: assigned reserved memory node vdevbuffer@55400000
-[ 1776.062113] virtio_rpmsg_bus virtio0: rpmsg host is online
-[ 1776.062212] rproc-virtio rproc-virtio.2.auto: registered virtio0 (type 7)
-[ 1776.062221] remoteproc remoteproc0: remote processor imx-rproc is now up
+[ 9788.823980] remoteproc remoteproc0: stopped remote processor imx-rproc
+[ 9788.875421] remoteproc remoteproc0: powering up imx-rproc
+[ 9788.878879] remoteproc remoteproc0: Booting fw image rpmsg_demo.elf, size 1210028
+[ 9789.391001] rproc-virtio rproc-virtio.2.auto: assigned reserved memory node vdevbuffer@55400000
+[ 9789.392865] virtio_rpmsg_bus virtio0: rpmsg host is online
+[ 9789.393014] rproc-virtio rproc-virtio.2.auto: registered virtio0 (type 7)
+[ 9789.393027] remoteproc remoteproc0: remote processor imx-rproc is now up
+[ 9789.393399] virtio_rpmsg_bus virtio0: creating channel rpmsg-client-sample-py addr 0x400
 ```
 
 
 ```bash
 tio --baudrate=115200 /dev/ttyUSB0
 
-*** Booting Zephyr OS build v4.4.0-10840-geaa480916f44 ***
-[00:00:00.004,000] <inf> rpmsg_client_sample: Starting Verdin iMX8MP OpenAMP remote
-Starting Verdin iMX8MP OpenAMP remote!
-[00:00:00.016,000] <inf> rpmsg_client_sample: manager(): platform_init
-[00:00:00.023,000] <inf> rpmsg_client_sample: platform_init(): metal_init
-[00:00:00.030,000] <inf> rpmsg_client_sample: platform_init(): metal_io_init
-[00:00:00.038,000] <inf> rpmsg_client_sample: platform_init(): rsc_table_get
-[00:00:00.045,000] <inf> rpmsg_client_sample: platform_init(): resource_table_size=88
-[00:00:00.053,000] <inf> rpmsg_client_sample: 0x0000b678 resource-table header
-[00:00:00.061,000] <inf> rpmsg_client_sample:   version=1, entries=1
-[00:00:00.068,000] <inf> rpmsg_client_sample: 0x0000b688 resource-table offsets
-[00:00:00.075,000] <inf> rpmsg_client_sample:   offset[0]=0x00000014
-[00:00:00.082,000] <inf> rpmsg_client_sample: 0x0000b68c virtio device
-[00:00:00.089,000] <inf> rpmsg_client_sample: 0x0000b6a4 virtio status: 0x00
-[00:00:00.097,000] <inf> rpmsg_client_sample: 0x0000b6a8 vring0: da=0x55000000, notifyid=0
-[00:00:00.105,000] <inf> rpmsg_client_sample: 0x0000b6bc vring1: da=0x55008000, notifyid=1
-[00:00:00.114,000] <inf> rpmsg_client_sample: platform_init(): metal_io_init
-[00:00:00.121,000] <inf> rpmsg_client_sample: platform_init(): device_is_ready
-[00:00:00.129,000] <inf> rpmsg_client_sample: platform_init(): ipm_register_callback
-[00:00:00.137,000] <inf> rpmsg_client_sample: platform_init(): ipm_set_enabled
-[00:00:00.145,000] <inf> rpmsg_client_sample: platform_init(): ipm_set_enabled
-[00:00:00.153,000] <inf> rpmsg_client_sample: manager(): create_rpmsg_device
-[00:00:00.160,000] <inf> rpmsg_client_sample: create_rpmsg_device(): rproc_virtio_create_vdev
-[00:00:00.169,000] <inf> rpmsg_client_sample: create_rpmsg_device(): rproc_virtio_wait_remote_ready
-[00:00:00.515,000] <inf> rpmsg_client_sample: ipm_callback()
+*** Booting Zephyr OS build v4.4.0-10953-gda0718ca0d52 ***
+[00:00:00.004,000] <inf> rpmsg_demo: Starting Verdin iMX8MP OpenAMP RpMsg demo
+[00:00:00.513,000] <inf> rpmsg_demo: Linux RPMsg endpoint is ready
+[00:00:01.274,000] <inf> rpmsg_demo: RPMsg received 21 bytes: 'LINUX sending rpmsg 0'
+[00:00:01.283,000] <inf> rpmsg_demo: RPMsg received 21 bytes: 'LINUX sending rpmsg 1'
+[00:00:01.292,000] <inf> rpmsg_demo: RPMsg received 21 bytes: 'LINUX sending rpmsg 2'
 ```
 
 ```bash
 ls  -1 /dev/re* /dev/rpmsg* /sys/bus/rpmsg/devices/
 /dev/remoteproc0
+/dev/rpmsg0
 /dev/rpmsg_ctrl0
 
 /sys/bus/rpmsg/devices/:
+virtio0.rpmsg-demo-xyrx2.-1.1024
 virtio0.rpmsg_ctrl.0.0
 virtio0.rpmsg_ns.53.53
 ```
@@ -67,7 +52,7 @@ virtio0.rpmsg_ns.53.53
 ## Compare this binary against working TCM binary
 
 ```bash
-export A=build/zephyr/rpmsg_lite_sample.elf
+export A=build/zephyr/rpmsg_demo.elf
 export B=/lib/firmware/imx8mp_m7_TCM_rpmsg_lite_pingpong_rtos_linux_remote.elf
 readelf -SW $A | grep resource_table
 Section Headers:
