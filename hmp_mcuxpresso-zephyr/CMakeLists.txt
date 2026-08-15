@@ -8,4 +8,7 @@ target_include_directories(app PRIVATE
 	${OPENAMP_INCLUDE_DIR}
 	${PLATFORM_DIR}
 )
-target_sources(app PRIVATE src/main.cpp)
+target_sources(app PRIVATE
+	src/lib_rpmsg.cpp
+	src/main.cpp
+)
