@@ -15,8 +15,11 @@ hmp_mcuxpresso-zephyr/src/main.c
 #include <metal/sys.h>
 #include <openamp/open_amp.h>
 
-#include <addr_translation.h>
 #include <resource_table.h>
+
+extern "C" {
+#include <addr_translation.h>
+}
 
 // Use of the kernel module with the same name
 // #define channel "rpmsg-client-sample"
@@ -55,7 +58,7 @@ static void *resource_table;
 
 static void ipm_callback(const struct device *dev, void *context, uint32_t id,
                          volatile void *data) {
-    struct fw_resource_table *table = resource_table;
+    auto *table = static_cast<struct fw_resource_table *>(resource_table);
 
     ARG_UNUSED(dev);
     ARG_UNUSED(context);
@@ -117,7 +120,7 @@ static int platform_init(void) {
     rsc_table_get(&resource_table, &resource_table_size);
     LOG_INF("platform_init(): resource_table_size=%d", resource_table_size);
 
-    struct fw_resource_table *ptr = resource_table;
+    auto *ptr = static_cast<struct fw_resource_table *>(resource_table);
     LOG_INF("0x%08" PRIxPTR " resource-table header", (uintptr_t)&ptr->hdr);
     LOG_INF("  version=%" PRIu32 ", entries=%" PRIu32, ptr->hdr.ver,
             ptr->hdr.num);
