@@ -40,11 +40,6 @@ LOG_MODULE_REGISTER(rpmsg_client_sample);
 #define SHM_SIZE DT_REG_SIZE(SHM_NODE)
 #define APP_TASK_STACK_SIZE 2048
 
-K_THREAD_STACK_DEFINE(manager_stack, APP_TASK_STACK_SIZE);
-K_THREAD_STACK_DEFINE(client_stack, APP_TASK_STACK_SIZE);
-
-static struct k_thread manager_thread;
-static struct k_thread client_thread;
 static K_SEM_DEFINE(ipm_sem, 0, 1);
 static K_SEM_DEFINE(client_ready_sem, 0, 1);
 
@@ -259,14 +254,14 @@ static void client(void *arg1, void *arg2, void *arg3) {
     LOG_INF("Linux RPMsg char endpoint is ready");
 }
 
+K_THREAD_DEFINE(manager_thread, APP_TASK_STACK_SIZE, manager, NULL, NULL, NULL,
+                K_PRIO_COOP(8), 0, 0);
+K_THREAD_DEFINE(client_thread, APP_TASK_STACK_SIZE, client, NULL, NULL, NULL,
+                K_PRIO_COOP(7), 0, 0);
+
 int main(void) {
     LOG_INF("Starting Verdin iMX8MP OpenAMP remote");
     printk("Starting Verdin iMX8MP OpenAMP remote!\n");
-
-    k_thread_create(&manager_thread, manager_stack, APP_TASK_STACK_SIZE,
-                    manager, NULL, NULL, NULL, K_PRIO_COOP(8), 0, K_NO_WAIT);
-    k_thread_create(&client_thread, client_stack, APP_TASK_STACK_SIZE, client,
-                    NULL, NULL, NULL, K_PRIO_COOP(7), 0, K_NO_WAIT);
 
     return 0;
 }
