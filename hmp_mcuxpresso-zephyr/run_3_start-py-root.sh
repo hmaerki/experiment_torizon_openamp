@@ -3,11 +3,11 @@ set -x
 modprobe rpmsg_ns
 modprobe rpmsg_ctrl
 modprobe rpmsg_char
-modprobe imx_rpmsg_tty
+# modprobe -r imx_rpmsg_tty 2>/dev/null || true
 # modprobe -r rpmsg-client-sample 2>/dev/null || true
 
 mkdir -p /root/firmware
-echo stop > /sys/class/remoteproc/remoteproc0/state
+echo stop > /sys/class/remoteproc/remoteproc0/state 2>/dev/null || true
 echo /root/firmware > /sys/module/firmware_class/parameters/path
 cp ./build/zephyr/rpmsg_lite_sample.elf /root/firmware
 echo rpmsg_lite_sample.elf > /sys/class/remoteproc/remoteproc0/firmware

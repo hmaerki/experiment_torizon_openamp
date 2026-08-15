@@ -3,15 +3,8 @@ clang-format -i -style='{IndentWidth: 4, TabWidth: 4, UseTab: Never}'
 hmp_mcuxpresso-zephyr/src/main.c
 */
 
-/*
- * Copyright (c) 2020 STMicroelectronics
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 #include <inttypes.h>
 #include <stdio.h>
-#include <string.h>
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/ipm.h>
@@ -29,12 +22,6 @@ hmp_mcuxpresso-zephyr/src/main.c
 // #define channel "rpmsg-client-sample"
 // Use with rpmsg_lite_sample.py
 #define RPMSG_CHAR_CHANNEL_NAME "rpmsg-client-sample-py"
-#define RPMSG_TTY_CHANNEL_NAME "rpmsg-virtual-tty-channel"
-#define RPMSG_TTY_ENDPOINT_ADDR 30U
-// This string is hardcoded in imx_rpmsg_tty.ko
-// #define RPMSG_TTY_READY_MESSAGE "hello world!"
-// This MUST match the python implementation!!!
-#define RPMSG_TTY_READY_MESSAGE "LINUX: TTY_READY_RXYVXT"
 
 LOG_MODULE_REGISTER(rpmsg_client_sample);
 
@@ -55,14 +42,11 @@ LOG_MODULE_REGISTER(rpmsg_client_sample);
 
 K_THREAD_STACK_DEFINE(manager_stack, APP_TASK_STACK_SIZE);
 K_THREAD_STACK_DEFINE(client_stack, APP_TASK_STACK_SIZE);
-K_THREAD_STACK_DEFINE(sender_stack, APP_TASK_STACK_SIZE);
 
 static struct k_thread manager_thread;
 static struct k_thread client_thread;
-static struct k_thread sender_thread;
 static K_SEM_DEFINE(ipm_sem, 0, 1);
 static K_SEM_DEFINE(client_ready_sem, 0, 1);
-static K_SEM_DEFINE(sender_ready_sem, 0, 1);
 
 static const struct device *const ipm = DEVICE_DT_GET(DT_CHOSEN(zephyr_ipc));
 static metal_phys_addr_t shm_physmap = SHM_START_ADDR;
@@ -72,7 +56,6 @@ static struct metal_io_region resource_table_io_data;
 static struct rpmsg_virtio_device rvdev;
 static struct rpmsg_device *rpdev;
 static struct rpmsg_endpoint char_endpoint;
-static struct rpmsg_endpoint tty_endpoint;
 static void *resource_table;
 
 static void ipm_callback(const struct device *dev, void *context, uint32_t id,
@@ -84,7 +67,6 @@ static void ipm_callback(const struct device *dev, void *context, uint32_t id,
     ARG_UNUSED(id);
     ARG_UNUSED(data);
     k_sem_give(&ipm_sem);
-    // LOG_INF("ipm_callback()");
     if (table != NULL) {
         LOG_INF("ipm_callback(): status=0x%02x, vring0.da=0x%08" PRIx32
                 ", vring1.da=0x%08" PRIx32,
@@ -102,23 +84,6 @@ static int char_endpoint_callback(struct rpmsg_endpoint *ept, void *data,
     LOG_INF("RPMsg char received %u bytes: '%.*s'", (unsigned int)len,
             (unsigned int)len, (char *)data);
     return rpmsg_send(ept, data, len);
-}
-
-static int tty_endpoint_callback(struct rpmsg_endpoint *ept, void *data,
-                                 size_t len, uint32_t src, void *priv) {
-    ARG_UNUSED(ept);
-    ARG_UNUSED(src);
-    ARG_UNUSED(priv);
-
-    LOG_INF("RPMsg TTY received %u bytes: '%.*s'", (unsigned int)len,
-            (unsigned int)len, (char *)data);
-
-    if (len == sizeof(RPMSG_TTY_READY_MESSAGE) - 1 &&
-        memcmp(data, RPMSG_TTY_READY_MESSAGE, len) == 0) {
-        k_sem_give(&sender_ready_sem);
-    }
-
-    return 0;
 }
 
 static void new_service_callback(struct rpmsg_device *rdev, const char *name,
@@ -267,7 +232,9 @@ static void manager(void *arg1, void *arg2, void *arg3) {
     LOG_INF("manager(): k_sem_give");
     k_sem_give(&client_ready_sem);
     while (true) {
+        // This awakens after ipm_callback()
         k_sem_take(&ipm_sem, K_FOREVER);
+        // proc_virtio_notified() can process received RPMsg data from VRING1_ID.
         LOG_INF("manager(): rproc_virtio_notified");
         rproc_virtio_notified(rvdev.vdev, VRING1_ID);
     }
@@ -289,56 +256,7 @@ static void client(void *arg1, void *arg2, void *arg3) {
         return;
     }
 
-    LOG_INF("client(): create '%s' endpoint at %u", RPMSG_TTY_CHANNEL_NAME,
-            RPMSG_TTY_ENDPOINT_ADDR);
-    ret = rpmsg_create_ept(&tty_endpoint, rpdev, RPMSG_TTY_CHANNEL_NAME,
-                           RPMSG_TTY_ENDPOINT_ADDR, RPMSG_ADDR_ANY,
-                           tty_endpoint_callback, NULL);
-    if (ret != 0) {
-        LOG_ERR("Could not create RPMsg TTY endpoint: %d", ret);
-        rpmsg_destroy_ept(&char_endpoint);
-        return;
-    }
-
-    LOG_INF("Linux RPMsg char and TTY endpoints are ready");
-}
-
-static void sender(void *arg1, void *arg2, void *arg3) {
-    uint32_t counter = 0;
-    char message[32];
-
-    ARG_UNUSED(arg1);
-    ARG_UNUSED(arg2);
-    ARG_UNUSED(arg3);
-
-    LOG_INF("sender(): Sender waiting to get read...");
-
-    k_sem_take(&sender_ready_sem, K_FOREVER);
-
-    LOG_INF("sender(): Sender started");
-
-    while (true) {
-        if (!is_rpmsg_ept_ready(&tty_endpoint)) {
-            LOG_WRN("sender(): !is_rpmsg_ept_ready()");
-            k_sleep(K_SECONDS(1));
-            continue;
-        }
-        LOG_INF("sender(): zephyr is sending %" PRIu32, counter);
-        int len = snprintf(message, sizeof(message),
-                           "zephyr is sending %" PRIu32 "\n", counter);
-        int ret = rpmsg_send(&tty_endpoint, message, len);
-
-        if (ret < 0) {
-            LOG_WRN("sender(): Could not send message: %d", ret);
-        } else {
-            counter++;
-        }
-        if (counter > 4) {
-            return;
-        }
-
-        k_sleep(K_SECONDS(1));
-    }
+    LOG_INF("Linux RPMsg char endpoint is ready");
 }
 
 int main(void) {
@@ -348,8 +266,6 @@ int main(void) {
     k_thread_create(&manager_thread, manager_stack, APP_TASK_STACK_SIZE,
                     manager, NULL, NULL, NULL, K_PRIO_COOP(8), 0, K_NO_WAIT);
     k_thread_create(&client_thread, client_stack, APP_TASK_STACK_SIZE, client,
-                    NULL, NULL, NULL, K_PRIO_COOP(7), 0, K_NO_WAIT);
-    k_thread_create(&sender_thread, sender_stack, APP_TASK_STACK_SIZE, sender,
                     NULL, NULL, NULL, K_PRIO_COOP(7), 0, K_NO_WAIT);
 
     return 0;

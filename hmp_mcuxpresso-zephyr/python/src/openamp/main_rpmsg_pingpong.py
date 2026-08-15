@@ -2,60 +2,14 @@
 
 import argparse
 import asyncio
-import os
 import pathlib
 import sys
 import time
-import tty
 import typing
 
 from util_rpmsg import Rpmsg
 
 CHANNEL: str = "rpmsg-client-sample-py"
-
-
-async def forward_tty_to_stdout(device: pathlib.Path) -> None:
-    print(f"{device}: waiting to open...")
-    while True:
-        try:
-            file_descriptor = os.open(device, os.O_RDWR | os.O_NOCTTY)
-            break
-        except FileNotFoundError:
-            await asyncio.sleep(0.1)
-    print(f"{device}: ...open!")
-
-    tty.setraw(file_descriptor)
-    os.write(file_descriptor, b"LINUX: TTY_READY_RXYVXT")
-    print("after: LINUX: TTY_READY")
-
-    loop = asyncio.get_running_loop()
-    finished = loop.create_future()
-
-    def on_readable() -> None:
-        try:
-            data = os.read(file_descriptor, 4096)
-            if not data:
-                loop.remove_reader(file_descriptor)
-                if not finished.done():
-                    finished.set_result(None)
-                return
-
-            print(f"{data}")
-            os.write(
-                file_descriptor,
-                data.replace(b"zephyr is sending", b"LINUX is sending"),
-            )
-        except OSError as error:
-            loop.remove_reader(file_descriptor)
-            if not finished.done():
-                finished.set_exception(error)
-
-    loop.add_reader(file_descriptor, on_readable)
-    try:
-        await finished
-    finally:
-        loop.remove_reader(file_descriptor)
-        os.close(file_descriptor)
 
 
 async def run_pingpong(
@@ -69,11 +23,6 @@ async def run_pingpong(
         print(f"Channel {rpmsg.channel.name}")
         print(f"Created endpoint through {rpmsg.control}")
         print(f"Exchanging {count} messages through {rpmsg.endpoint}")
-
-        tty_task = asyncio.create_task(
-            forward_tty_to_stdout(pathlib.Path("/dev/ttyRPMSG30")),
-            name="ttyRPMSG30-to-stdout",
-        )
 
         received = 0
         await rpmsg.write(f"LINUX sending rpmsg {received}".encode())
@@ -91,7 +40,6 @@ async def run_pingpong(
         print(
             f"goodbye after {duration_s:0.1f}s! {1000.0 * duration_s / count:0.1f}ms per call."
         )
-        await tty_task
 
 
 def parse_args(argv: typing.Sequence[str] | None = None) -> argparse.Namespace:
