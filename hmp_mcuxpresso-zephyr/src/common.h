@@ -4,7 +4,6 @@ hmp_mcuxpresso-zephyr/sources/rpmsg-lite/zephyr/samples/rpmsglite_pingpong/commo
 https://github.com/nxp-mcuxpresso/rpmsg-lite/blob/main/zephyr/samples/rpmsglite_pingpong/common.h
 */
 
-
 /*
  * Copyright 2023 NXP
  *
@@ -15,10 +14,11 @@ https://github.com/nxp-mcuxpresso/rpmsg-lite/blob/main/zephyr/samples/rpmsglite_
 #define RPMSG_LITE_COMMON_H_
 
 /*
- * Define here hardcoded to `0`. As all supported boards start with the link_id 0.
- * In case application specific change is required please refer to bellow.
+ * Define here hardcoded to `0`. As all supported boards start with the link_id
+ * 0. In case application specific change is required please refer to bellow.
  *
- * Link ID used to define the rpmsg-lite instance, see rpmsg-lite/lib/include/<platform>/rpmsg_platform.h
+ * Link ID used to define the rpmsg-lite instance, see
+ * rpmsg-lite/lib/include/<platform>/rpmsg_platform.h
  */
 #define RPMSG_LITE_LINK_ID (0)
 

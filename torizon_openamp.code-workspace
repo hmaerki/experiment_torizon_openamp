@@ -21,6 +21,12 @@
 		}
 	],
 	"settings": {
+		"[c]": {
+			"editor.defaultFormatter": "ms-vscode.cpptools"
+		},
+		"[cpp]": {
+			"editor.defaultFormatter": "ms-vscode.cpptools"
+		},
 		"[python]": {
 			"editor.defaultFormatter": "charliermarsh.ruff",
 			"editor.formatOnSave": true
@@ -32,15 +38,16 @@
 		"C_Cpp.default.browse.path": [
 			"${workspaceFolder}/hmp_mcuxpresso-zephyr/src"
 		],
-//		"files.exclude": {
-//			"**/*": true,
-//			"${workspaceFolder}/**/src/**": false
-//		},
+		//		"files.exclude": {
+		//			"**/*": true,
+		//			"${workspaceFolder}/**/src/**": false
+		//		},
 		"files.watcherExclude": {
 			"${workspaceFolder}/yocto-workdir/**": true,
 			"${workspaceFolder}/hmp_zephyr/zephyr/**": true,
 			"${workspaceFolder}/hmp_mcuxpresso-zephyr/zephyr/**": true,
 		},
+		"C_Cpp.codeAnalysis.in": {},
 		"python.analysis.include": [
 			"${workspaceFolder}/hmp_mcuxpresso-zephyr/src"
 		],
