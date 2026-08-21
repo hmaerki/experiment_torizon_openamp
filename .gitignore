@@ -2,9 +2,9 @@
 yocto-workdir/.repo/
 yocto-workdir/
 zephyr/
-mallow_breakout/kicad/mellow_breakout_v*/_restore_backup_*
-mallow_breakout/kicad/mellow_breakout_v*/.history/
-mallow_breakout/kicad/mellow_breakout_v*/*.bak
+mallow_breakout/kicad/mallow_breakout_v*/_restore_backup_*
+mallow_breakout/kicad/mallow_breakout_v*/.history/
+mallow_breakout/kicad/mallow_breakout_v*/*.bak
 hmp_mcuxpresso-copilot/build/
 hmp_mcuxpresso-copilot/modules/
 hmp_mcuxpresso-copilot/.west/

@@ -115,6 +115,7 @@ Successfully downloaded Toradex Easy Installer.
 * gvncviewer 192.168.11.1 
   * On VNC/monitor: Toradex Easy Installer
     * Feeds: http://octoprobe4.local:8000/
+    * Feeds: http://maerki-dell-5550.local:8000/
     * Select Torizon OS -> Install -> Yes -> I Accept
 
 ### Connect with ssh

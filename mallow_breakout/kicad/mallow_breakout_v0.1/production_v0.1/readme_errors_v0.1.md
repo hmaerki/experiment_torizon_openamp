@@ -15,3 +15,5 @@
 ## UART3/4: The levelshifter should be powered by UART3 AND UART4!
 
 ## Root UART4 back to UART1/2 to be able to use tio from the SOM
+
+## Add ground pads!
